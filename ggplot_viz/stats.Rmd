@@ -1,0 +1,158 @@
+---
+title: "Stats"
+output: html_notebook
+---
+Calculating statistics
+```{r}
+set.seed(123)
+xx <- rnorm(100)
+mean(xx)
+sd(xx)
+mean(xx) +  sd(xx) * c(-1, 1)
+
+library(Hmisc)
+smean.sdl(xx, mult = 1)
+# wrapper around smean.sdl
+mean_sdl(xx, mult = 1)
+
+## ggplot::stat_summary uses geom_pointrange
+## which uses y ymin ymax
+ggplot(iris, aes(x = Species, y = Sepal.Length)) +
+  stat_summary(fun.data = mean_sdl, fun.args = list(mult=1))
+
+ggplot(iris, aes(x = Species, y = Sepal.Length)) + 
+  stat_summary(fun.y = mean, geom = "point") +
+  stat_summary(fun.data = mean_sdl, fun.args = list(mult=1),
+               geom = "errorbar", width = 0.1)
+```
+
+Outputs from fun.data must match the arguments expected by the geom we use.
+```{r}
+foo <- function(x) c(y=4, ymin=1, ymax=6)
+ggplot(iris, aes(x = Species, y = Sepal.Length)) +
+  stat_summary(fun.data = foo) # uses geom_pointbar by default
+
+ggplot(iris, aes(x = Species, y = Sepal.Length)) +
+  stat_summary(fun.data = foo, geom = "point")
+
+ggplot(iris, aes(x = Species, y = Sepal.Length)) +
+  stat_summary(fun.data = foo, geom = "errorbar")
+
+bar <- function(x) c(y=4, xmin=1, xmax=5)
+# error
+# ggplot(iris, aes(x = Species, y = Sepal.Length)) +
+#   stat_summary(fun.data = bar, geom = "errorbar")
+
+```
+
+
+```{r}
+library(MASS)
+mam.new <- data.frame(body = log10(mammals$body))
+ggplot(mam.new, aes(x=body)) + 
+  geom_histogram(aes(y = ..density..)) +
+  geom_rug() + 
+  stat_function(fun = dnorm, colour = "red",
+                args = list(mean = mean(mam.new$body),
+                          sd = sd(mam.new$body)))
+```
+
+
+
+In this exercise we'll consider the preparations. That means we'll make sure the data is in the right format and that all the positions that we might use in our plots are defined. Lastly, we'll set the base layer for our plot. ggplot2 is already loaded, so you can get started straight away!
+
+In mtcars, cyl and am are classified as continuous, but they are actually categorical. Previously we just used factor(), but here we'll modify the actual dataset. Change cyl and am to be categorical in the mtcars data frame using as.factor.
+
+
+
+```{r}
+library(ggplot2)
+mtcars2 <- mutate(mtcars, cyl = as.factor(cyl),
+                          am = as.factor(am))
+# 
+```
+posn.d, using position_dodge() with a width of 0.1
+```{r}
+posn.d <- position_dodge(width = 0.1)
+posn.jd <- position_jitterdodge(jitter.width = 0.1, dodge.width = 0.2)
+posn.j <- position_jitter(width = 0.2)
+```
+
+Finally, we'll make our base layers and store it in the object wt.cyl.am. Make the base call for ggplot mapping cyl to the x, wt to y, am to both col and fill. Also set group = am inside aes(). The reason for these redundancies will become clear later on.
+
+```{r}
+wt.cyl.am <- ggplot(mtcars2, aes(cyl, wt, col = am, fill = am, group = am))
+# Plot 1: Jittered, dodged scatter plot with transparent points
+wt.cyl.am +
+  geom_point(position = posn.j, alpha = 0.6)
+
+```
+```{r}
+# wt.cyl.am, posn.d, posn.jd and posn.j are available
+
+# Plot 1: Jittered, dodged scatter plot with transparent points
+wt.cyl.am +
+  geom_point(position = posn.jd, alpha = 0.6)
+
+# Plot 2: Mean and SD - the easy way
+wt.cyl.am + 
+stat_summary(fun.data = mean_sdl, fun.args=list(mult=1), position = posn.d)
+
+
+# Plot 3: Mean and 95% CI - the easy way
+wt.cyl.am +
+stat_summary(fun.data = mean_cl_normal, position = posn.d)
+
+
+# Plot 4: Mean and SD - with T-tipped error bars - fill in ___
+wt.cyl.am +
+  stat_summary(geom = "point", fun.y = mean,
+               position = posn.d) +
+  stat_summary(geom = "errorbar", fun.data = mean_sdl,
+               position = posn.d, fun.args = list(mult = 1), width = 0.1)
+```
+
+
+```{r}
+# The base ggplot command; you don't have to change this
+wt.cyl.am <- ggplot(mtcars, aes(x = cyl,y = wt, col = am, fill = am, group = am))
+
+# Play vector xx is available
+
+# Function to save range for use in ggplot
+gg_range <- function(x) {
+  # Change x below to return the instructed values
+  data.frame(ymin = min(x), # Min
+             ymax = max(x)) # Max
+}
+
+gg_range(xx)
+# Required output
+#   ymin ymax
+# 1    1  100
+
+# Function to Custom function
+med_IQR <- function(x) {
+  # Change x below to return the instructed values
+  data.frame(y = median(x), # Median
+             ymin = quantile(x)[2], # 1st quartile
+             ymax = quantile(x)[4])  # 3rd quartile
+}
+
+med_IQR(xx)
+# Required output
+#        y  ymin  ymax
+# 25% 50.5 25.75 75.25
+
+# Add three stat_summary calls to wt.cyl.am
+wt.cyl.am +
+  stat_summary(geom = "linerange", fun.data = med_IQR,
+               position = posn.d, size = 3) +
+  stat_summary(geom = "linerange", fun.data = gg_range,
+               position = posn.d, size = 3,
+               alpha = 0.4) +
+  stat_summary(geom = "point", fun.y = median,
+               position = posn.d, size = 3,
+               col = "black", shape = "X")
+```
+

@@ -1,0 +1,60 @@
+---
+title: "House Sales"
+output: html_document
+---
+
+```{r}
+library(ggmap)
+sales  <- readRDS('data/01_corv_sales.rds')
+
+corvallis <- c(lon = -123.2620, lat = 44.5646)
+corvallis_map <- get_map(corvallis, zoom = 13, scale = 1, maptype = "satellite")
+# Edit to display satellite map
+ggmap(corvallis_map) +
+  geom_point(aes(lon, lat, color = year_built), data = sales)
+
+ggmap(corvallis_map) + 
+  geom_point(aes(lon, lat), data = sales)
+
+```
+ 
+```{r}
+corvallis_stamen <- get_map(corvallis, maptype = "toner", source = "stamen", zoom = 13)
+
+ggmap(corvallis_stamen) + 
+  geom_point(aes(lon, lat, color = year_built), data = sales)
+```
+ 
+# Base Layers
+
+```{r}
+ggmap(corvallis_stamen) + 
+  geom_point(aes(lon, lat, color = year_built), data = sales)
+
+# or
+
+ggmap(corvallis_stamen, 
+      base_layer = ggplot(sales, aes(lon, lat, color = year_built))) + 
+  geom_point()
+
+# so we can use facets
+
+ggmap(corvallis_stamen, 
+      base_layer = ggplot(sales, aes(lon, lat, color = year_built))) +
+  geom_point() + 
+facet_wrap(~class)
+```
+
+```{r}
+
+```
+Drawing polygons
+A choropleth map describes a map where polygons are colored according to some variable. In the ward_sales data frame, you have information on the house sales summarised to the ward level. Your goal is to create a map where each ward is colored by one of your summaries: the number of sales or the average sales price.
+
+In the data frame, each row describes one point on the boundary of a ward. The lon and lat variables describe its location and ward describes which ward it belongs to, but what are group and order?
+
+Remember the two tricky things about polygons? An area may be described by more than one polygon and order matters. group is an identifier for a single polygon, but a ward may be composed of more than one polygon, so you would see more than one value of group for such a ward. order describes the order in which the points should be drawn to create the correct shapes.
+
+In ggplot2, polygons are drawn with geom_polygon(). Each row of your data is one point on the boundary and points are joined up in the order in which they appear in the data frame. You specify which variables describe position using the x and y aesthetics and which points belong to a single polygon using the group aesthetic.
+
+This is a little tricky, so before you make your desired plot, let's explore this a little more.

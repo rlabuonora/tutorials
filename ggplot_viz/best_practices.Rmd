@@ -1,0 +1,65 @@
+---
+title: "Best Practices"
+output: html_notebook
+---
+
+
+
+```{r}
+d <- ggplot(msleep %>% 
+         na.omit(vore), 
+       aes(vore, sleep_total)) + 
+  scale_x_discrete(
+    "Eating Habits",
+    labels = c("Carnivore", "Herbivore", "Insectivore", "Omnivore")
+  ) +
+  scale_y_continuous("Total Sleep time (h)") + 
+  theme_classic()
+
+p1 <- d + 
+  stat_summary(fun.y = mean, geom = "bar", fill = "grey50") + 
+  stat_summary(fun.data = mean_sdl, 
+               fun.args = list(mult = 1), 
+               geom = "errorbar", width = 0.2)
+
+p2 <- d +
+  geom_point(alpha = 0.6, position = position_jitter(width = 0.2))
+```
+
+```{r}
+# Base layers
+
+mtcars.cyl <- mtcars %>% 
+  group_by(cyl) %>% 
+  summarise(wt.avg = mean(wt),
+            sd = sd(wt),
+            n = n()) %>% 
+  mutate(prop = n/sum(n))
+
+m <- ggplot(mtcars.cyl, aes(x = cyl, y = wt.avg))
+
+# Plot 1: Draw bar plot with geom_bar
+m + geom_bar(stat = "identity", fill = "skyblue")
+
+# Plot 2: Draw bar plot with geom_col
+m + geom_col(fill = "skyblue")
+
+# Plot 3: geom_col with variable widths.
+m + geom_col(fill = "skyblue", width = mtcars.cyl$prop)
+ 
+# Plot 4: Add error bars
+plt <- m + 
+  geom_col(fill = "skyblue", width = mtcars.cyl$prop) +
+  geom_errorbar(aes(ymin = wt.avg-sd, ymax = wt.avg+sd), width = 0.1)
+```
+
+```{r}
+library(datasets)
+data("HairEyeColor")
+```
+
+```{r}
+library(lattice)
+data("barley")
+```
+

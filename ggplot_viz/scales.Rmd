@@ -1,0 +1,27 @@
+---
+title: "Zooming"
+output: html_notebook
+---
+
+
+```{r}
+library(ggplot2)
+library(tidyverse)
+mtcars2 <- mutate(mtcars, am =factor(am), cyl = factor(cyl))
+p <- ggplot(mtcars2, aes(x = wt, y = hp, col = am)) + 
+  geom_point() + 
+  geom_smooth()
+p
+
+```
+
+Extend p with a scale_x_continuous() with limits = c(3, 6) and expand = c(0, 0). What do you see?
+
+```{r}
+p + scale_x_continuous(limits = c(3,6), expand = c(0, 0))
+p + coord_cartesian(xlim = c(3,6))
+```
+
+
+
+

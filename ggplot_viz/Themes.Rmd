@@ -1,0 +1,71 @@
+---
+title: "Themes"
+output: html_notebook
+---
+
+
+```{r}
+
+my_blues = brewer.pal(n = 9, "Blues")[c(4,6,9)] 
+
+z <- ggplot(mtcars, aes(x = wt, y = mpg, col = cyl)) + 
+  geom_point(alpha = 0.6) + 
+  geom_smooth(alpha = 0.6, se = FALSE, method = "lm") + 
+  facet_wrap(~cyl, scales="free_y") + 
+  xlab("Weight (lb/100)") + 
+  ylab("Miles / gallon") + 
+  scale_color_manual(values = my_blues, name = "Cylinders") + 
+  scale_y_continuous(limits = c(10,35))
+
+
+```
+
+```{r}
+myPink <- "#FEE0D2"
+z + theme(plot.background = element_rect(fill=myPink))
+```
+
+```{r}
+# Starting point
+z
+
+# Plot 1: Change the plot background fill to myPink
+z + 
+  theme(plot.background = element_rect(fill = myPink))
+
+# Plot 2: Adjust the border to be a black line of size 3
+z + 
+  theme(plot.background = element_rect(fill = myPink, color = "black", size = 3)) # expanded from plot 1
+
+# Theme to remove all rectangles
+no_panels <- theme(rect = element_blank())
+
+# Plot 3: Combine custom themes
+t <- z +
+  no_panels +
+  theme(plot.background = element_rect(fill = myPink, color = "black", size = 3))
+```
+
+
+Your goal is to produce the plot in the viewer - no grid lines, but red axes and tick marks.
+
+```{r}
+p1 <- t + 
+  theme(panel.grid = element_blank(), 
+        axis.line = element_line(color="red"),
+        axis.ticks = element_line(color="red"))
+
+```
+
+
+```{r}
+myRed <- "#99000D"
+p2 <- p1 + theme(
+  strip.text = element_text(size = 16, color = myRed),
+  axis.title = element_text(color = myRed, 
+                            hjust = 0, 
+                            face = "italic"),
+  axis.text = element_text(color = "black")
+)
+```
+
